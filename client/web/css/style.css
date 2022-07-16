@@ -1,0 +1,319 @@
+*{
+    margin: 0;
+    padding: 0;
+}
+html body{
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.address{
+    border-radius: 0;
+    min-width: 175%;
+    position: relative;
+    right: 120px;
+}
+/* Wallet page */
+.navbar{
+    background-color: #355E3B;
+    max-height: 60px;
+}
+.active{
+    background-color:#AFE1AF;
+    color: white;
+}
+.nav-link{
+    color: white;
+    min-height: 60px;
+    line-height: 40px;
+}
+.nav-link:hover{
+    background-color: #AFE1AF;
+    color: white;
+
+}
+.fa{
+    color: white;
+}
+.navbar-toggler{
+    box-shadow: none !important;
+}
+.fa-bell{
+    position: relative;
+    left: 15px;
+    top: 10px;
+}
+
+.swal-wide{
+    width:80% !important;
+}
+
+.fa-cog{
+    position: relative;
+    left: 30px;
+    top: 10px;
+}
+
+.header{
+    background-color: #f3f3f3;
+    height: 50px;
+}
+.header ul{
+    list-style-type: none;
+    display: flex;
+    gap: 20px;
+}
+.header ul li a{
+    text-decoration: none;
+    color:  #355E3B;
+     height: 60px;
+    line-height: 50px;
+}
+.header ul li a:hover{
+    border-bottom: 1px solid  #355E3B;
+   padding-bottom: 13px;
+}
+.active-2{
+    border-bottom: 1px solid  #355E3B;
+    padding-bottom: 13px;
+}
+.wallet-box{
+    background-color: #f3f3f3;
+    padding-top: 15px;
+    padding-bottom: 0;
+    margin-top: 30px;
+    padding-inline: 20px;
+}
+.wallet-box ul{
+    list-style-type: none;
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    padding: 0;
+
+}
+.wallet-box ul li:nth-child(1){
+    position: relative;
+    top: 10px;
+}
+.coin-icon{
+    width: 24px;
+    height: 24px;
+}
+.wallet-box ul li p{
+    background-color: #355E3B;
+    color: white;
+    padding-block: 10px;
+    padding-inline: 30px;
+}
+.footer{
+    margin-top: 350px;
+}
+.footer p{
+    position: relative;
+    left: 50px;
+}
+
+/* History Page */
+.selectBox , .date{
+    background-color: #f3f3f3;
+    min-width: 100%;
+    height: 40px;
+    border: 0;
+    padding-inline: 5px;
+    outline: 0;
+    color: #355E3B;
+    border-radius: 2px;
+}
+label{
+    font-weight: 500;
+    color: #355E3B;
+}
+.boxes{
+    background-color: #AFE1AF;
+    color: #355E3B;
+    min-width: 100%;
+    font-weight: bold;
+    padding-inline: 10px;
+    padding-block: 5px;
+    margin-top: 10px;
+    border-radius: 2px;
+}
+.boxes-2{
+    background-color:#f3f3f3;
+    color: #355E3B;
+    min-width: 100%;
+    font-weight: bold;
+    padding-inline: 10px;
+    padding-block: 5px;
+    margin-top: 10px;
+    border-radius: 2px;
+}
+.fa-plus , .fa-minus , .fa-arrow-up, .fa-arrow-down{
+    color: #355E3B;
+}
+.filter-btn{
+    background-color: #355E3B;
+    border-radius: 2px;
+    color: white;
+    min-width: 100%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+.filter-btn:hover{
+    color: white;
+}
+.table{
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+
+}
+
+.table-row{
+    background-color: #f3f3f3;
+    min-width: 100%;
+    position: relative;
+    top: -40px;
+}
+thead{
+    position: relative;
+    top: -50px;
+    z-index: -999;
+}
+.table-row td:nth-child(1){
+    border-left: 4px solid #355E3B;
+}
+.export-div{
+    float: right;
+   position: relative;
+    bottom: 5px;
+
+}
+.export-btn{
+    background-color: #355E3B;
+    color: white;
+    padding-block: 5px;
+    padding-inline: 20px;
+    border-radius: 2px;
+}
+.export-btn:hover{
+    color: white;
+}
+.receiver{
+    background-color: #355E3B;
+    color: white;
+    padding-inline: 10px;
+    padding-block: 4px;
+}
+/* Responsiveness */
+@media screen and (max-width: 767px) {
+
+    html{
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    .address{
+       min-width: 100%;
+        position: relative;
+        right: 0;
+    }
+    .boxes , .boxes-2{
+        display: none;
+    }
+    .selectBox{
+        margin-top: 10px;
+    }
+    .navbar-collapse{
+        background-color: #355E3B;
+        min-width: 100%;
+        position: relative;
+        z-index: 999;
+    }
+
+    .active{
+        display: inline-block;
+    }
+    .nav-link{
+        display: inline-block;
+        padding-inline: 10px !important;
+        margin-top: 15px;
+    }
+   form.d-flex{
+       display: flex;
+       flex-direction: column;
+       padding: 20px;
+   }
+   .fa-cog{
+       position: relative;
+       left: 50px;
+       top: 0;
+   }
+   .fa-bell{
+       position: relative;
+       top: 15px;
+   }
+   .wallet-box ul li:nth-child(1){
+       font-size: 14px;
+
+   }
+   .wallet-box ul li img{
+       width: 18px;
+       height: 18px;
+   }
+   .wallet-box ul li p{
+       padding-inline: 15px;
+       padding-block: 8px;
+   }
+  .export-btn{
+      font-size: 12px;
+  }
+  th{
+      border: none;
+  }
+  .table{
+   position: relative;
+      top: 40px;
+  }
+  .export-div{
+      position: relative;
+      top: 35px;
+  }
+  .table th:nth-child(2){
+      position: relative;
+      left: -40px;
+  }
+  td{
+      font-size: 9px;
+  }
+
+
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .navbar-collapse{
+        background-color: #355E3B;
+        min-width: 100%;
+        position: relative;
+        z-index: 999;
+    }
+    .address{
+        min-width: 100%;
+        position: relative;
+        right: 0;
+    }
+    td{
+        font-size: 12px;
+    }
+
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+
+    .address{
+        min-width: 175%;
+        position: relative;
+        right: 150px;
+    }
+
+}

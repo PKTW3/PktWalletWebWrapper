@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wallet</title>
+
+    <!-- Bootstrap 5 CDN Links -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <script src="js/bootstrap.bundle.min.js"></script>
+
+    <!-- Fontawesome - for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/fontawesome.min.css" integrity="sha512-kJ30H6g4NGhWopgdseRb8wTsyllFUYIx3hiUwmGAkgA9B/JbzUBDQVr2VVlWGde6sdBVOG7oU8AL35ORDuMm8g==" crossorigin="anonymous" />
+
+    <!-- CSS Stylesheet linking -->
+    <link href="css/style.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+<div id="page-content">
+<!-- Top Header -->
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item mx-2">
+                    <a class="nav-link active" aria-current="page" href="#">Overview</a>
+                </li>
+                <li class="nav-item mx-2">
+                    <a id ="a-send-pkt" class="nav-link" href="#">Send</a>
+                </li>
+                <li class="nav-item mx-2">
+                    <a id="a-trade-pkt" class="nav-link" href="#">Trade</a>
+                </li>
+                <li class="nav-item mx-2">
+                    <a id="a-troubleshoot-wallet" class="nav-link" href="#">Help</a>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<header class="header">
+    <div class="container">
+        <ul>
+            <li><a id="a-receive-pkt" href="#" class="active-2">Balances</a></li>
+            <li><a id="a-create-new-address" href="#">Create new address</a></li>
+            <li><a href="#">Contacts</a></li>
+        </ul>
+    </div>
+</header>
+
+<section>
+    <div class="container">
+        <div style="padding:2px;"></div>
+        <div id="progress-bar-div" class="progress progress-danger">
+            <div id="progress-bar" class="bar" style="width: 1%; background-color: #355E3B;text-align: center;"><span id="bar-text" style="color: #FFFFFF;">Syncronizing with PKT Blockchain</span></div>
+        </div>
+        <div class="wallet-box">
+            <ul id="a-pkt-balances">
+                <li><img src="images/pkt.png" class="coin-icon">&nbsp;&nbsp;PKT Cash</li>
+                <li><p id="pkt-balance">Wallet Balance</p></li>
+            </ul>
+        </div>
+    </div>
+</section>
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <hr>
+        <p>-</p>
+        <p>Pkt CLI Wallet Version: <span id="cli-v">-</span></p>
+    </div>
+</footer>
+
+</body>
+<script src="./js/socketurl.js"></script>
+<script src="./js/bootstrap.bundle.min.js"></script>
+<script src="./js/socket.io.min.js"></script>
+<script src="./js/sweetalert.min.js"></script>
+<script src="./js/jquery-3.6.0.min.js"></script>
+
+<script>
+    var walletState = undefined;
+    var miners = undefined;
+
+    async function main() {
+        let pc = $("#page-content");
+        pc.hide();
+        const { value: facode } = await Swal.fire({
+            title: 'Enter Your Google Auth Code',
+            input: 'text',
+            inputLabel: 'Your Google Auth Code',
+            inputValue: "",
+            showCancelButton: false,
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'You need to write something!'
+                }
+            }
+        });
+
+        if (facode) {
+            Socket.emit("auth", { code:facode.toString()});
+        } else {
+            $('<div class="jumbotron">\n' +
+                '  <h1>Uh-oh!</h1>\n' +
+                '<div class="alert alert-danger" role="alert">Authorization prompt exited, please reload the page.</div>\n' +
+                '  <p><a id="learn-more-unauthorized-prompt-exit" class="btn btn-primary btn-lg" href="#" role="button">Learn more</a></p>\n' +
+                '</div>').appendTo(document.body);
+        }
+    }
+
+    function isPktAddress(addr) {
+        return addr.startsWith("pkt");
+    }
+
+    var Socket = io(socketurl, {});
+
+    var progressBar = $("#progress-bar");
+    var progressBarDiv = $("#progress-bar-div");
+    var progressBarText = $("#bar-text");
+
+    var barAnimation = undefined;
+    var limit = 0;
+    var counter = 0;
+
+    Socket.on("wallet-state", (walletState2) => {
+        walletState = walletState2;
+        //console.log(JSON.stringify(walletState));
+
+        try {
+            if(walletState.isSyncing) {
+                if (!progressBarDiv.is(":visible")) {
+                    progressBarDiv.show();
+
+
+                    if (barAnimation === undefined) {
+                        limit = parseInt(walletState.walletStats.SyncRemainingSeconds);
+
+                        barAnimation = setInterval(async () => {
+                            var p = (100 * counter) / limit;
+
+                            progressBar.css("width", p + "%");
+                            progressBarText.html("Synchronizing Wallet - block #"+walletState.walletStats.SyncCurrentBlock+"/"+walletState.currentChainHead+" ("+p.toFixed(2)+"%)");
+
+
+                            counter++;
+                            if (counter >= limit) {
+                                clearInterval(barAnimation);
+                                barAnimation = undefined;
+                            }
+                        }, 1000);
+                    }
+                }
+            } else if(walletState.resyncing) {
+                //console.log(walletState.walletStats.MaintenanceLastBlockVisited);
+                if (!progressBarDiv.is(":visible")) {
+                    progressBarDiv.show();
+                }
+
+                    if (barAnimation === undefined) {
+                         barAnimation = setInterval(async () => {
+                            var p =  (walletState.walletStats.MaintenanceLastBlockVisited / walletState.currentHeight) * 100;
+
+                            //console.log("pr: "+p);
+
+                            progressBar.css("width", p + "%");
+                            progressBarText.html("Resynchronizing Wallet - block #"+walletState.walletStats.MaintenanceLastBlockVisited+"/"+walletState.currentHeight+" ("+p.toFixed(2)+"%)");
+                        }, 1000);
+                    }
+            } else {
+                if(progressBarDiv.is(":visible")) {
+                    progressBarDiv.hide();
+
+                    if (barAnimation !== undefined) {
+                        clearInterval(barAnimation);
+                        barAnimation = undefined;
+                    }
+                }
+            }
+
+
+            let unconfirmed = 0;
+
+            for(let i = 0; i < walletState.walletBalances.length; i++) {
+                if (walletState.walletBalances[i].total > 0) {
+                    if (walletState.walletBalances[i].unconfirmed > 0) {
+                        unconfirmed += walletState.walletBalances[i].unconfirmed;
+                    }
+                }
+            }
+
+            if(unconfirmed > 0) {
+                $("#pkt-balance").html("spendable: " + walletState.globalBalance + " unconfirmed: " + unconfirmed);
+            } else {
+                $("#pkt-balance").html(walletState.globalBalance);
+            }
+        } catch(err) {
+            console.log(err);
+        }
+    });
+
+    Socket.on("fold-check", (data) => {
+        let result = data.result;
+
+        if(result) {
+            Swal.fire({
+                title: 'Folded!',
+                text: data.address+' has been folded',
+                icon: 'info',
+                confirmButtonText: 'Ok'
+            });
+        } else {
+            Swal.fire({
+                title: 'Not Folded!',
+                text: data.address+' did not require a folding operation.',
+                icon: 'warning',
+                confirmButtonText: 'Ok'
+            });
+        }
+    });
+
+    Socket.on("authorized", () => {
+        let pc = $("#page-content");
+        pc.show();
+
+        Socket.emit("refresh-state");
+        Socket.emit("miners");
+    });
+
+    Socket.on("unauthorized", () => {
+        let pc = $("#page-content");
+        pc.hide();
+        $('<div class="jumbotron">\n' +
+            '  <h1>Uh-oh!</h1>\n' +
+            '  <div class="alert alert-danger" role="alert">Unauthorized by server, please reload this page.</div>\n' +
+            '  <p><a id="learn-more-unauthorized" class="btn btn-primary btn-lg" href="#" role="button">Learn more</a></p>\n' +
+            '</div>').appendTo(document.body);
+    });
+
+    Socket.on("authorization-timeout", () => {
+        let pc = $("#page-content");
+        pc.hide();
+        $('<div class="jumbotron">\n' +
+            '  <h1>Uh-oh!</h1>\n' +
+            '<div class="alert alert-danger" role="alert">Timed out during authorization process, please reload this page.</div>\n' +
+            '  <p><a id="learn-more-unauthorized-timeout" class="btn btn-primary btn-lg" href="#" role="button">Learn more</a></p>\n' +
+            '</div>').appendTo(document.body);
+    });
+
+    Socket.on("wallet-status", (status) => {
+        $("#wallet-status").html(status);
+    });
+
+    Socket.on("miners", (agents) => {
+        miners = agents;
+        console.log(miners);
+    });
+
+    Socket.on("create-address", (result)=> {
+        Swal.fire({
+            title: 'New Wallet Address added!',
+            text: 'address: '+result,
+            icon: 'info',
+            confirmButtonText: 'Ok'
+        });
+    });
+
+    Socket.on("send-failed", async(data) => {
+        if(data.codeDenied !== undefined && data.codeDenied) {
+            Swal.fire({
+                title: 'Incorrect 2FA',
+                text: 'The Code you entered is not valid. Please try again.',
+                icon: 'error',
+                confirmButtonText: 'Ok'
+            });
+        }
+    });
+
+    Socket.on("send-submitted", async(data) => {
+            Swal.fire({
+                title: 'Transaction submitted!',
+                html: 'You can view the transaction (May not be immediately available) at your favorite explorer with the transaction id: '+data.txid+' or at this <a target="_blank" href="'+explorerUrl+'/'+data.txid+'">link</a>',
+                icon: 'success',
+                confirmButtonText: 'Ok'
+            });
+    });
+
+
+    Socket.on('error', function (err) {
+        Swal.fire({
+            title: 'Error!',
+            text: 'Server network connection err: '+err,
+            icon: 'error',
+            confirmButtonText: 'Ok'
+        });
+    });
+
+    Socket.io.on('connect_error', function (err) {
+        Swal.fire({
+            title: 'Error!',
+            text: 'Server network connection err: '+err,
+            icon: 'error',
+            confirmButtonText: 'Ok'
+        });
+    });
+
+    Socket.on("close", function(msg) {
+        Swal.fire({
+            title: 'Error!',
+            text: 'Server closed connection: '+msg,
+            icon: 'error',
+            confirmButtonText: 'Ok'
+        });
+
+        Socket.close();
+    });
+
+    // Connected to Socket Successfully
+    Socket.on('connect', function () {
+        //console.log("connected");
+
+        main();
+    });
+
+    //TODO: send pkt address quicklist
+
+    //TODO: generified send / prefilled destination address
+
+    $("#a-send-pkt").on("click", async () => {
+        if(walletState.isSyncing || walletState.resyncing) {
+            Swal.fire(
+                'Sorry!',
+                'Sending is not available during synchronization or resynchronization.',
+                'error'
+            );
+        } else {
+            let addresses = {};
+            let funds = {};
+
+            let hasFunds = false;
+
+            for(let i = 0; i < walletState.walletBalances.length; i++) {
+                if(walletState.walletBalances[i].total > 0) {
+                    hasFunds = true;
+                    if(walletState.walletBalances[i].total !== walletState.walletBalances[i].unconfirmed) {
+                        addresses[walletState.walletBalances[i].address] = ''+walletState.walletBalances[i].address+' ('+walletState.walletBalances[i].total+' PKT)';
+                        funds[walletState.walletBalances[i].address] = walletState.walletBalances[i].total;
+                    }
+                }
+            }
+
+            if(hasFunds) {
+                const { value: sourceAddress } = await Swal.fire({
+                    title: 'Select pkt wallet address to use for funding',
+                    input: 'select',
+                    inputOptions: {
+                        addresses
+                    },
+                    inputPlaceholder: 'Select a sender address to use',
+                    showCancelButton: true,
+                    confirmButtonText:
+                        'Next',
+                    inputValidator: (value) => {
+                        return new Promise((resolve) => {
+                            resolve();
+                        })
+                    }
+                })
+
+                if (sourceAddress) {
+                    const { value: formValues } = await Swal.fire({
+                        title: 'Send PKT',
+                        showCancelButton: true,
+                        html:
+                            '<b><i>'+sourceAddress+'</i></b><br />' +
+                            'To: <input id="swal-input2" class="swal2-input">',
+                        focusConfirm: false,
+                        preConfirm: () => {
+                            return [
+                                document.getElementById('swal-input2').value
+                            ]
+                        },
+                        confirmButtonText:
+                            'Next'
+                    })
+
+                    if (formValues) {
+                        let toAddress = formValues[0];
+
+                        if(isPktAddress(toAddress)) {
+                            let sendAmount2 = await Swal.fire({
+                                title: 'How much pkt would you like to send?',
+                                html: 'sendable is usually -0.001 off your balance<br/><br/> Balance: <b>'+funds[sourceAddress]+'</b> PKT <br/>',
+                                icon: 'question',
+                                input: 'text',
+                                inputValue: 0
+                            }).then(sendAmount3 => {
+                                let sendAmount = sendAmount3.value;
+                                Swal.fire({
+                                    title: 'Sending <b>' + sendAmount + '</b> PKT',
+                                    html:  "</br ><br/>sender: <b><i>" + sourceAddress + "</i></b> <br/><br/> receiever: <b>" + toAddress + "</b>",
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#3085d6',
+                                    cancelButtonColor: '#d33',
+                                    confirmButtonText: 'Yes, send the pkt!'
+                                }).then(async (result) => {
+                                    if (result.isConfirmed) {
+                                            let codeI = await Swal.fire({
+                                                title: 'Please Enter 2FA Code',
+                                                html: 'Enter your 2FA Code to finalize send.',
+                                                icon: 'question',
+                                                input: 'text',
+                                                inputValue: 0
+                                            }).then(sendAmount3 => {
+                                                let code = sendAmount3.value;
+
+                                                let val = parseFloat(sendAmount);
+
+                                                Swal.fire(
+                                                    'Sent!',
+                                                    'Your request has been sent to the payment maker queue',
+                                                    'success'
+                                                )
+
+                                                Socket.emit("send-pkt", {
+                                                    code: code,
+                                                    pktSenderAddress: sourceAddress,
+                                                    pktReceiverAddress: toAddress,
+                                                    pktAmount: val
+                                                });
+                                            });
+
+
+                                    } else {
+                                        Swal.fire(
+                                            'Cancelled!',
+                                            'Your send has been cancelled.',
+                                            'info'
+                                        )
+                                    }
+                                });
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                'Your send has been cancelled, the destination address is invalid, you provided the following: '+toAddress,
+                                'error'
+                            )
+                        }
+                    }
+                }
+            } else {
+                Swal.fire(
+                    'Sorry!',
+                    'Your send has been cancelled, no wallet addresses in your wallet have sendable funds. ',
+                    'error'
+                )
+            }
+        }
+
+
+    });
+
+    function showHistory() {
+        let addresses = {};
+        let funds = {};
+
+        let hasFunds = false;
+
+        for(let i = 0; i < walletState.walletBalances.length; i++) {
+            if(walletState.walletBalances[i].total > 0) {
+                hasFunds = true;
+                addresses[walletState.walletBalances[i].address] = walletState.walletBalances[i].address;
+                funds[walletState.walletBalances[i].address] = walletState.walletBalances[i].total;
+            }
+            //addresses[walletState.walletBalances[i].address] = walletState.walletBalances[i].address;
+        }
+
+
+        Swal.fire({
+            title: 'Transaction History',
+            customClass: 'swal-wide',
+            html:  "<main class=\"mt-3\">\n" +
+                "    <div class=\"container\">\n" +
+                "        <div class=\"row\">\n" +
+                "            <div class=\"col-lg-3 col-md-3 col-sm-12\">\n" +
+                "                   <select class=\"selectBox\">\n" +
+                "                       <option>Transaction type</option>\n" +
+                "                       <option>Sent</option>\n" +
+                "                       <option>Received</option>\n" +
+                "                       <option>Gateways</option>\n" +
+                "                       <option>Trades</option>\n" +
+                "                       <option>Orders</option>\n" +
+                "                       <option>Other</option>\n" +
+                "                   </select>\n" +
+                "\n" +
+                "                <div class=\"boxes\">\n" +
+                "                    <i class=\"fa fa-plus\"></i>&nbsp;&nbsp;Sent\n" +
+                "                </div>\n" +
+                "                <div class=\"boxes\">\n" +
+                "                    <i class=\"fa fa-plus\"></i>&nbsp;&nbsp;Received\n" +
+                "                </div>\n" +
+                "\n" +
+                "                <div class=\"boxes-2\">\n" +
+                "                    <i class=\"fa fa-minus\"></i>&nbsp;&nbsp;Gateways\n" +
+                "                </div>\n" +
+                "\n" +
+                "                <div class=\"boxes-2\">\n" +
+                "                    <i class=\"fa fa-minus\"></i>&nbsp;&nbsp;Trades\n" +
+                "                </div>\n" +
+                "\n" +
+                "                <div class=\"boxes-2\">\n" +
+                "                    <i class=\"fa fa-minus\"></i>&nbsp;&nbsp;Orders\n" +
+                "                </div>\n" +
+                "\n" +
+                "                <div class=\"boxes-2\">\n" +
+                "                    <i class=\"fa fa-minus\"></i>&nbsp;&nbsp;Other\n" +
+                "                </div>\n" +
+                "<br>\n" +
+                "                <select class=\"selectBox\">\n" +
+                "                    <option>Date</option>\n" +
+                "                </select>\n" +
+                "                <p>Local history for specific date range</p>\n" +
+                "\n" +
+                "                <label>From</label>\n" +
+                "                <input type=\"date\" class=\"form-control date\">\n" +
+                "\n" +
+                "                <label>To</label>\n" +
+                "                <input type=\"date\" class=\"form-control date\">\n" +
+                "\n" +
+                "\n" +
+                "                <button class=\"btn filter-btn\">Filter</button>\n" +
+                "            </div>\n" +
+                "            <div class=\"col-lg-9 col-md-9 col-sm-12\">\n" +
+                "                <div class=\"export-div\">\n" +
+                "                <button class=\"btn export-btn\">Export to CSV</button>\n" +
+                "                </div>\n" +
+                "                <table class=\"table\">\n" +
+                "                    <thead>\n" +
+                "                    <tr>\n" +
+                "                        <th>Date</th>\n" +
+                "                        <th>Description</th>\n" +
+                "\n" +
+                "                    </tr>\n" +
+                "                    </thead>\n" +
+                "\n" +
+                "                    <tbody>\n" +
+                "                    <tr class=\"table-row\">\n" +
+                "                        <td><i class=\"fa fa-arrow-up\"></i>&nbsp;Thu, March 11, 7:51:30 PM</td>\n" +
+                "                        <td>You sent <b>0.00090 PKT</b> to <span class=\"receiver\"> Alex Johnson</span></td>\n" +
+                "                    </tr>\n" +
+                "\n" +
+                "                    <tr class=\"table-row\">\n" +
+                "                        <td><i class=\"fa fa-arrow-up\"></i>&nbsp;Thu, March 11, 7:51:30 PM</td>\n" +
+                "                        <td>You sent <b>0.00090 PKT</b> to <span class=\"receiver\"> Alex Johnson</span></td>\n" +
+                "                    </tr>\n" +
+                "\n" +
+                "                    <tr class=\"table-row\">\n" +
+                "                        <td><i class=\"fa fa-arrow-up\"></i>&nbsp;Thu, March 11, 7:51:30 PM</td>\n" +
+                "                        <td>You sent <b>0.00090 PKT</b> to <span class=\"receiver\"> Alex Johnson</span></td>\n" +
+                "                    </tr>\n" +
+                "\n" +
+                "                    <tr class=\"table-row\">\n" +
+                "                        <td><i class=\"fa fa-arrow-down\"></i>&nbsp;Thu, March 11, 7:51:30 PM</td>\n" +
+                "                        <td><span class=\"receiver\"> Alex Johnson</span> sent you <b>0.00090 PKT</b></td>\n" +
+                "                    </tr>\n" +
+                "\n" +
+                "                    <tr class=\"table-row\">\n" +
+                "                        <td><i class=\"fa fa-arrow-down\"></i>&nbsp;Thu, March 11, 7:51:30 PM</td>\n" +
+                "                        <td><span class=\"receiver\"> Alex Johnson</span> sent you <b>0.00090 PKT</b></td>\n" +
+                "                    </tr>\n" +
+                "\n" +
+                "                    <tr class=\"table-row\">\n" +
+                "                        <td><i class=\"fa fa-arrow-down\"></i>&nbsp;Thu, March 11, 7:51:30 PM</td>\n" +
+                "                        <td><span class=\"receiver\"> Alex Johnson</span> sent you <b>0.00090 PKT</b></td>\n" +
+                "                    </tr>\n" +
+                "\n" +
+                "                    <tr class=\"table-row\">\n" +
+                "                        <td><i class=\"fa fa-arrow-up\"></i>&nbsp;Thu, March 11, 7:51:30 PM</td>\n" +
+                "                        <td>You sent <b>0.00090 PKT</b> to <span class=\"receiver\"> Alex Johnson</span></td>\n" +
+                "                    </tr>\n" +
+                "\n" +
+                "                    <tr class=\"table-row\">\n" +
+                "                        <td><i class=\"fa fa-arrow-up\"></i>&nbsp;Thu, March 11, 7:51:30 PM</td>\n" +
+                "                        <td>You sent <b>0.00090 PKT</b> to <span class=\"receiver\"> Alex Johnson</span></td>\n" +
+                "                    </tr>\n" +
+                "\n" +
+                "                    <tr class=\"table-row\">\n" +
+                "                        <td><i class=\"fa fa-arrow-up\"></i>&nbsp;Thu, March 11, 7:51:30 PM</td>\n" +
+                "                        <td>You sent <b>0.00090 PKT</b> to <span class=\"receiver\"> Alex Johnson</span></td>\n" +
+                "                    </tr>\n" +
+                "\n" +
+                "                    <tr class=\"table-row\">\n" +
+                "                        <td><i class=\"fa fa-arrow-down\"></i>&nbsp;Thu, March 11, 7:51:30 PM</td>\n" +
+                "                        <td><span class=\"receiver\"> Alex Johnson</span> sent you <b>0.00090 PKT</b></td>\n" +
+                "                    </tr>\n" +
+                "\n" +
+                "                    <tr class=\"table-row\">\n" +
+                "                        <td><i class=\"fa fa-arrow-down\"></i>&nbsp;Thu, March 11, 7:51:30 PM</td>\n" +
+                "                        <td><span class=\"receiver\"> Alex Johnson</span> sent you <b>0.00090 PKT</b></td>\n" +
+                "                    </tr>\n" +
+                "\n" +
+                "                    <tr class=\"table-row\">\n" +
+                "                        <td><i class=\"fa fa-arrow-down\"></i>&nbsp;Thu, March 11, 7:51:30 PM</td>\n" +
+                "                        <td><span class=\"receiver\"> Alex Johnson</span> sent you <b>0.00090 PKT</b></td>\n" +
+                "                    </tr>\n" +
+                "                    </tbody>\n" +
+                "                </table>\n" +
+                "\n" +
+                "            </div>\n" +
+                "        </div>\n" +
+                "    </div>\n" +
+                "</main>\n",
+            icon: 'info',
+            showCancelButton: false,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'OK'
+        })
+    }
+
+    function showTrades() {
+        let html2 = '<p>There are a couple of options that are available when it comes to trading pkt, you can do so using the <a target="_blank" rel="nofollow" href="https://t.me/joinchat/VTzmfU6P3YB7WrYx">telegram group</a><br /> You can also find other platforms (markets) to trade on using <a target="_blank" rel="nofollow" href="https://coinmarketcap.com/currencies/pkt/markets/">CoinMarketCap</a></p>';
+        Swal.fire({
+            title: 'Trading using Pkt Cash',
+            html:  html2,
+            icon: 'info',
+            showCancelButton: false,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'OK'
+        })
+    }
+
+    function fold(addr) {
+        Swal.fire({
+            title: 'Fold operation submitted!',
+            html:  "The folding process for address \""+addr+"\" will occur over the next 5 seconds, and will not be executed unless required by the network.",
+            icon: 'info',
+            showCancelButton: false,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'OK'
+        });
+
+        Socket.emit("fold-check", addr);
+    }
+
+    function foldAll() {
+        Swal.fire({
+            title: 'Mass Fold operation submitted!',
+            html:  "The folding actions have been submitted, you will only be alerted if a wallet address has been folded.",
+            icon: 'info',
+            showCancelButton: false,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'OK'
+        });
+
+
+        Socket.emit("fold-all");
+    }
+
+
+    function showBalances() {
+
+        let addresses = {};
+
+        let hasFunds = false;
+        let html2 = "You can recieve pkt payments from any of your generated pkt addresses below </br><br/>";
+
+        html2 = html2 + "<button type=\"button\" class=\"btn btn-warning\" onclick='foldAll()'>Fold All Addresses</button><br/><br/>"
+
+        if(walletState.walletBalances.length === 0) {
+            Swal.fire({
+                title: 'PKT Balances',
+                html:  "You need to generate a wallet address first to receive pkt payments",
+                icon: 'info',
+                showCancelButton: false,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'OK'
+            })
+        } else {
+
+            var withFunds = [];
+            var withoutFunds = [];
+
+            for(let i = 0; i < walletState.walletBalances.length; i++) {
+                if(walletState.walletBalances[i].total > 0) {
+                    withFunds.push({
+                        address: walletState.walletBalances[i].address,
+                        total: walletState.walletBalances[i].total
+                    });
+                } else {
+                    withoutFunds.push({
+                        address: walletState.walletBalances[i].address,
+                        total: walletState.walletBalances[i].total
+                    });
+                }
+            }
+
+            withFunds.sort((a, b) => parseFloat(b.total) - parseFloat(a.total));
+
+            for(let j = 0; j < withFunds.length; j++) {
+                html2 = html2 + "<div class=\"alert alert-success\" role=\"alert\">" +
+                    "<h4 class=\"alert-heading\">" + withFunds[j].address + "</h4>" +
+                    "<b>Balance: </b>" + withFunds[j].total +
+                    "<br />" +
+                    "" +
+                    "<button type=\"button\" class=\"btn btn-info\"><a style='color: inherit;text-decoration: inherit;' target='_blank' href='"+explorerUrl+"/address/"+withFunds[j].address+"'>View On Explorer</a></button>" +
+                    "<button type=\"button\" class=\"btn btn-warning\" onclick='fold(\""+withFunds[j].address+"\")'>Fold This Address</button>" +
+                    "</div>"
+            }
+
+            for(let k = 0; k < withoutFunds.length; k++) {
+                html2 = html2 + "<div class=\"alert alert-warning\" role=\"alert\">" +
+                    "<h4 class=\"alert-heading\">" + withoutFunds[k].address + "</h4></h4>" +
+                    "<b>Balance: </b>" + withoutFunds[k].total +
+                    "</div>"
+            }
+
+            Swal.fire({
+                title: 'PKT Balances',
+                customClass: 'swal-wide',
+                html:  html2,
+                icon: 'info',
+                showCancelButton: false,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'OK'
+            })
+        }
+    }
+
+    $("#a-receive-pkt").on("click", () => {
+        showBalances();
+    });
+
+    $("#a-trade-pkt").on("click", () => {
+        showTrades();
+    });
+
+    $("#a-pkt-balances").on("click", () => {
+        showBalances();
+    });
+
+    $("#a-troubleshoot-wallet").on("click", () => {
+        let html2 = 'You can find more information on solving common wallet issues or run diagnostic scripts or otherwise from this window <br /><button type="button" class="btn btn-danger">Restart Wallet</button>';
+        Swal.fire({
+            title: 'Troubleshoot Web Wallet & Pkt Wallet',
+            html:  html2,
+            icon: 'info',
+            showCancelButton: false,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'OK'
+        })
+    });
+
+
+
+    $("#a-create-new-address").on("click", () => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, create a new address!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Socket.emit("create-address");
+            }
+        })
+    });
+
+    $("#a-command-console").on("click", () => {
+        Swal.fire({
+            title: 'Error!',
+            text: 'not implemented',
+            icon: 'error',
+            confirmButtonText: 'Ok'
+        });
+
+    });
+
+    $("#a-history").on("click", () => {
+        showHistory();
+    });
+</script>
+
+</html>

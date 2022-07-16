@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PktWebWallet</title>
+
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div id="page-content">
+    Your QR code will show below once you've been authorized, once you've registered your QR code with your authentication provider, you can login by viewing the <a href="/">Wallet Main Page</a>
+</div>
+</body>
+<script src="./js/socketurl.js"></script>
+<script src="./js/bootstrap.bundle.min.js"></script>
+<script src="./js/socket.io.min.js"></script>
+<script src="./js/sweetalert.min.js"></script>
+<script src="./js/jquery-3.6.0.min.js"></script>
+
+<script>
+    async function main() {
+
+        const { value: qrcode } = await Swal.fire({
+            title: 'Enter Your QR password',
+            input: 'text',
+            inputLabel: 'Your QR password',
+            inputValue: "",
+            showCancelButton: false,
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'You need to write something!'
+                }
+            }
+        });
+
+        if (qrcode) {
+            //Swal.fire(`Your IP address is ${ipAddress}`)
+            Socket.emit("qr-request", qrcode.toString());
+        } else {
+            $('<div class="jumbotron">\n' +
+                '  <h1>Uh-oh!</h1>\n' +
+                '<div class="alert alert-danger" role="alert">Authorization prompt exited, please reload the page.</div>\n' +
+                '  <p><a id="learn-more-unauthorized-prompt-exit" class="btn btn-primary btn-lg" href="#" role="button">Learn more</a></p>\n' +
+                '</div>').appendTo(document.body);
+        }
+    }
+
+    var Socket = io(socketurl, {
+
+    });
+
+    Socket.on("unauthorized", () => {
+    });
+
+    Socket.on("authorization-timeout", () => {
+
+    });
+
+    Socket.on("login-qr", (imageBase64) => {
+        var image = new Image();
+        image.src = imageBase64;
+        document.body.appendChild(image);
+
+        Socket.emit("close", "Load the main page once you've registered the qr code");
+    });
+
+    Socket.on('error', function (err) {
+        Swal.fire({
+            title: 'Error!',
+            text: 'Server network connection err: '+err,
+            icon: 'error',
+            confirmButtonText: 'Ok'
+        });
+    });
+
+    Socket.io.on('connect_error', function (err) {
+        Swal.fire({
+            title: 'Error!',
+            text: 'Server network connection err: '+err,
+            icon: 'error',
+            confirmButtonText: 'Ok'
+        });
+    });
+
+    Socket.on("close", function(msg) {
+        Swal.fire({
+            title: 'Error!',
+            text: 'Server closed connection: '+msg,
+            icon: 'error',
+            confirmButtonText: 'Ok'
+        });
+
+        Socket.close();
+    });
+
+    Socket.on('connect', function () {
+        main();
+    });
+</script>
+
+</html>
