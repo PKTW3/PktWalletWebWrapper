@@ -156,6 +156,11 @@ class Wallet {
     }
 
     async foldAddress(addr) {
+        //for some reason if we don't unlock here, sometimes the spend will fail, but only with folding??
+        if(this.locked) {
+            await this.unlockWallet(10);
+        }
+
         return await this.spendPkt(addr, addr, 0);
     }
 
