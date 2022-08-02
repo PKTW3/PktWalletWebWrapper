@@ -10,7 +10,7 @@ The primary transmission technologies are web based (http / https).
 
 PW3 is intended to be ran on a closed network space, I.E behind a VPN (& or) Reverse Web Proxy with access control lists.
 
-A guide is in progress, it will detail how to make use of a free p2p VPN connection provided by one or more third party services to access your wallet securely from a wide range of devices.
+A guide is in progress, it will detail how to make use of a free p2p VPN connection provided by one or more third party services to access your wallet securely from a wide range of devices. (see: https://tailscale.com/ for a zero config option)
 
 ## Why
 
