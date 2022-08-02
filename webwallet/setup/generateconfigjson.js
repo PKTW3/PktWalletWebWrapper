@@ -23,7 +23,7 @@ async function run() {
 
     let clientWebPath = input("Enter the absolute path to client/web folder of the web wallet software: ");
 
-    let write = input("write to file? ");
+    let write = input("write to file? (yes/no)");
 
     let o = {
         walletstorage: path,

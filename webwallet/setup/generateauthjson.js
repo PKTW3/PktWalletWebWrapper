@@ -11,7 +11,7 @@ async function run() {
     console.log("This script will configure your 2fa authentication for login")
     let id = input("Please enter the id to display in your 2fa app for this wallet: ");
 
-    let shouldSave = input("should this script save to .json auth file automatically?: ");
+    let shouldSave = input("should this script save to .json auth file automatically? (yes/no): ");
 
     if(shouldSave === "yes") {
         await auth.generateSaveQR(id, "../auth.json");
