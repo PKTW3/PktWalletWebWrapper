@@ -15,13 +15,13 @@ async function run() {
 
     let path = input("Please enter your absolute wallet db path (ex '/root/.pktwallet')? ");
 
-    let walletbinpath = input("absolute path to wallet executable folder? ")
+    let walletbinpath = input("absolute path to wallet executable folder? (ex: C:\\desktop\\wallet-v1.5.0-windows\\bin\\) ")
 
-    let walletpw = input("Please provide the wallet db password for the provided path? ");
+    let walletpw = input("Provide the password for the provided wallet: ");
 
-    let qrpassword = input("Please enter a password or type generate to generate a password for the 2fa QR: ");
+    let qrpassword = input("Please enter a password or type generate to generate a password for the 2fa (used for authentication): ");
 
-    let clientWebPath = input("Enter the absolute path to client/web folder of the web wallet software");
+    let clientWebPath = input("Enter the absolute path to client/web folder of the web wallet software: ");
 
     let write = input("write to file? ");
 
@@ -34,13 +34,13 @@ async function run() {
     };
 
     if(write === "yes") {
-        fs.writeFile("../config.json", JSON.stringify(o), (err) => {
+        fs.writeFile("../config.json", JSON.stringify(o, null, 2), (err) => {
             // throws an error, you could also catch it here
             if (err) throw err;
             // success case, the file was saved
         });
     } else {
-        console.log(JSON.stringify(o));
+        console.log(JSON.stringify(o, null, 2));
     }
 }
 

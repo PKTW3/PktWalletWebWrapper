@@ -1,4 +1,4 @@
-docker run --name pkt-web-wallet -d -p 0.0.0.0:8222:80 \
+docker run --name pkt-web-wallet -d -p 127.0.0.1:81:80 \
 -v /srv/pwdata/auth.json:/srv/webwallet/auth.json \
 -v /srv/pwdata/config.json:/srv/webwallet/config.json \
 -v /srv/pwdata/socketurl.js:/srv/client/web/js/socketurl.js \

@@ -16,7 +16,7 @@ class pktdWalletProcess {
         if(isWindows) {
             this.child = this.shell.exec(config.walletbinpath + "pktwallet.exe", {async:true, silent: true});
         } else {
-            this.child = this.shell.exec("./pktd/bin/pktwallet", {async:true, silent: true});
+            this.child = this.shell.exec(config.walletbinpath + "pktwallet", {async:true, silent: true});
         }
 
         this.running = true;

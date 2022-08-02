@@ -24,7 +24,8 @@ class Socket {
         this.socket.on("connect", () => {
             p.connected = true;
             //logger.log("Connected to Miner manager server.");
-            this.socket.emit("auth", {code: config.consolePassword, type:"console"});
+
+            //this.socket.emit("auth", {code: config.consolePassword, type:"console"}); //this is part of a future update
 
             this.socket.on("authorized", () => {
                 logger.log("Console session started with Miner manager server.");

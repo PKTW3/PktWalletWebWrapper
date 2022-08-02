@@ -1,6 +1,6 @@
 {
   "name": "pktwebwallet",
-  "version": "0.0.1",
+  "version": "0.9.0",
   "dependencies": {
     "2fa": "^0.1.2",
     "better-queue": "^3.8.10",
