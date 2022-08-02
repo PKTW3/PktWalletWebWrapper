@@ -29,7 +29,7 @@ let minerManagerSyncer = undefined;
 class websockserv {
 
     constructor(pktdDaemon) {
-        this.port = 80;
+        this.port = config.listenport;
         this.app = express();
         this.http = require('http');
         this.server = this.http.createServer(this.app);
@@ -108,8 +108,8 @@ class websockserv {
             this.app.use('/css', express.static(path.join(config.clientWebPath, 'css')));
             this.app.use('/images', express.static(path.join(config.clientWebPath, 'images')));
 
-        this.server.listen(this.port, () => {
-            logger.log('websocket listening listening on *:'+this.port);
+        this.server.listen(this.port, config.listenip,511, () => {
+            logger.log('websocket listening listening on '+config.listenip+':'+this.port);
         });
 
 

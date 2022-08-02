@@ -23,6 +23,9 @@ async function run() {
 
     let clientWebPath = input("Enter the absolute path to client/web folder of the web wallet software: ");
 
+    let ip = input("enter ip address to listen on: ");
+    let port = input("enter port to listen on: ");
+
     let write = input("write to file? (yes/no)");
 
     let o = {
