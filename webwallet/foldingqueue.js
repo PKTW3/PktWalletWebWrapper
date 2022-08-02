@@ -3,6 +3,8 @@ const explorer = require("./lookup/explorer.js");
 const events = require("./events.js");
 const logger = require("./util/logger.js");
 
+const config = require("./config.json");
+
 const q = new Queue(async function (input, cb) {
 
     let address = input.address;
@@ -16,7 +18,7 @@ const q = new Queue(async function (input, cb) {
     }
 
 
-    if(addressDetails!== undefined && addressDetails.unconsolidatedTransations > 200) {
+    if(addressDetails!== undefined && addressDetails.unconsolidatedTransations > config.unconsolidatedTransationsFold) {
         logger.log(address + " needs to fold.");
         events.emit("fold-check-results" , {
             input: input,

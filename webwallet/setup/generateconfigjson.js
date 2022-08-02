@@ -26,6 +26,8 @@ async function run() {
     let ip = input("enter ip address to listen on: ");
     let port = input("enter port to listen on: ");
 
+
+
     let write = input("write to file? (yes/no)");
 
     let o = {
@@ -33,7 +35,10 @@ async function run() {
         wallet_password: walletpw,
         qrpassword: qrpassword,
         walletbinpath: walletbinpath,
-        clientWebPath: clientWebPath
+        clientWebPath: clientWebPath,
+        listenip: ip,
+        listenport: port,
+        unconsolidatedTransationsFold: 200
     };
 
     if(write === "yes") {
