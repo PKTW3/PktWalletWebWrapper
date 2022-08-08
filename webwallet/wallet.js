@@ -137,7 +137,7 @@ class Wallet {
                 t.lockWallet();
             }, period * 1000);
 
-            let cmd = "./pktd/bin/pktctl --wallet walletpassphrase " + config.wallet_password + " " + period;
+            let cmd = config.walletbinpath+"pktctl --wallet walletpassphrase " + config.wallet_password + " " + period;
 
             if(isWindows)  {
                 cmd = config.walletbinpath+"pktctl.exe --wallet walletpassphrase " + config.wallet_password + " " + period
@@ -169,7 +169,7 @@ class Wallet {
             let shell = require("shelljs");
             shell.config.silent = true;
 
-            let json = !isWindows ? await shelljsExec(shell, "./pktd/bin/pktctl --wallet getinfo") : await shelljsExec(shell, config.walletbinpath+"pktctl.exe --wallet getinfo");
+            let json = !isWindows ? await shelljsExec(shell, config.walletbinpath+"pktctl --wallet getinfo") : await shelljsExec(shell, config.walletbinpath+"pktctl.exe --wallet getinfo");
 
             return JSON.parse(json);
         }
@@ -183,7 +183,7 @@ class Wallet {
             if(isWindows) {
                 shelljsExec(shell, config.walletbinpath+"pktctl.exe --wallet walletlock");
             } else {
-                shelljsExec(shell, "./pktd/bin/pktctl --wallet walletlock");
+                shelljsExec(shell, config.walletbinpath+"pktctl --wallet walletlock");
             }
 
 
@@ -200,7 +200,7 @@ class Wallet {
             let shell = require("shelljs");
             shell.config.silent = true;
 
-            let json = !isWindows ? await shelljsExec(shell, "./pktd/bin/pktctl --wallet getaddressbalances 1 1") : await shelljsExec(shell, config.walletbinpath+"pktctl.exe --wallet getaddressbalances 1 1") ;
+            let json = !isWindows ? await shelljsExec(shell, config.walletbinpath+"pktctl --wallet getaddressbalances 1 1") : await shelljsExec(shell, config.walletbinpath+"pktctl.exe --wallet getaddressbalances 1 1") ;
 
             //console.log(json);
 
@@ -213,7 +213,7 @@ class Wallet {
             let shell = require("shelljs");
             shell.config.silent = true;
 
-            let r = !isWindows ? await shelljsExec(shell, "./pktd/bin/pktctl --wallet getbalance") : await shelljsExec(shell, config.walletbinpath+"pktctl.exe --wallet getbalance");
+            let r = !isWindows ? await shelljsExec(shell, config.walletbinpath+"pktctl --wallet getbalance") : await shelljsExec(shell, config.walletbinpath+"pktctl.exe --wallet getbalance");
 
             r = r.toString();
             r = r.replace("\n", "");
@@ -231,7 +231,7 @@ class Wallet {
                 await this.unlockWallet(10);
             }
 
-            let res = !isWindows ? await shelljsExec(shell, "./pktd/bin/pktctl --wallet sendtoaddress " + toAddr + " " + pktAmount) : await shelljsExec(shell, config.walletbinpath+"pktctl.exe --wallet sendtoaddress " + toAddr + " " + pktAmount) ;
+            let res = !isWindows ? await shelljsExec(shell, config.walletbinpath+"pktctl --wallet sendtoaddress " + toAddr + " " + pktAmount) : await shelljsExec(shell, config.walletbinpath+"pktctl.exe --wallet sendtoaddress " + toAddr + " " + pktAmount) ;
 
             return res;
         }
@@ -253,7 +253,7 @@ class Wallet {
                 await this.unlockWallet(10);
             }
 
-            let res = !isWindows ? await shelljsExec(shell, "./pktd/bin/pktctl --wallet sendfrom " + toAddr + " 0 '[\"" + fromAddr + "\"]'") : await shelljsExec(shell, config.walletbinpath+'pktctl.exe --wallet sendfrom ' + toAddr + " 0 [\\\"" + fromAddr + "\\\"]") ;
+            let res = !isWindows ? await shelljsExec(shell, config.walletbinpath+"pktctl --wallet sendfrom " + toAddr + " 0 '[\"" + fromAddr + "\"]'") : await shelljsExec(shell, config.walletbinpath+'pktctl.exe --wallet sendfrom ' + toAddr + " 0 [\\\"" + fromAddr + "\\\"]") ;
 
             return res;
         } else {
@@ -264,7 +264,7 @@ class Wallet {
                 await this.unlockWallet(10);
             }
 
-            let res = !isWindows ? await shelljsExec(shell, "./pktd/bin/pktctl --wallet sendfrom " + toAddr + " " + pktAmount + " '[\"" + fromAddr + "\"]'") : await shelljsExec(shell, config.walletbinpath+'pktctl.exe --wallet sendfrom ' + toAddr + " " + pktAmount + " [\\\"" + fromAddr + "\\\"]") ;
+            let res = !isWindows ? await shelljsExec(shell, config.walletbinpath+"pktctl --wallet sendfrom " + toAddr + " " + pktAmount + " '[\"" + fromAddr + "\"]'") : await shelljsExec(shell, config.walletbinpath+'pktctl.exe --wallet sendfrom ' + toAddr + " " + pktAmount + " [\\\"" + fromAddr + "\\\"]") ;
 
             return res;
         }
@@ -290,7 +290,7 @@ class Wallet {
 
                     });
                 } else {
-                    shelljsExecE(shell, "./pktd/bin/pktctl --wallet resync").then((l) => {
+                    shelljsExecE(shell, config.walletbinpath+"pktctl --wallet resync").then((l) => {
                         if(l.stderr !== undefined && l.stderr.toString() !== "" && l.stderr.toString().includes("rescan job")) {
                             return resolve(false);
                         } else {
@@ -312,7 +312,7 @@ class Wallet {
             if(isWindows) {
                 return shelljsExec(shell, config.walletbinpath+"pktctl.exe --wallet getnewaddress");
             } else {
-                return shelljsExec(shell, "./pktd/bin/pktctl --wallet getnewaddress");
+                return shelljsExec(shell, config.walletbinpath+"pktctl --wallet getnewaddress");
             }
         }
     }
