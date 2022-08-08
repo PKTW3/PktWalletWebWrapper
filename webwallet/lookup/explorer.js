@@ -1,10 +1,17 @@
 const puppeteer = require('puppeteer');
 
 let config = require("../config.json");
+const os = require("os");
+
+let isWindows = os.platform() === 'win32';
+
+function isCurrentUserRoot() {
+    return process.getuid() === 0;
+}
 
 async function getCurrentBlockHeight() {
 
-    const browser = await puppeteer.launch();
+    const browser = isWindows ? await puppeteer.launch() : isCurrentUserRoot() ? await puppeteer.launch({args: ['--no-sandbox']}) : await puppeteer.launch();
     const page = await browser.newPage();
     await page.goto(config.explorerUrl, {waitUntil: 'networkidle0'});
 
@@ -19,7 +26,7 @@ async function getCurrentBlockHeight() {
 
 async function getExplorerBlockDetails(blkid) {
 
-    const browser = await puppeteer.launch();
+    const browser = isWindows ? await puppeteer.launch() : isCurrentUserRoot() ? await puppeteer.launch({args: ['--no-sandbox']}) : await puppeteer.launch();
     const page = await browser.newPage();
     await page.goto(config.explorerUrl+'/block/'+blkid, {waitUntil: 'networkidle0'});
 
@@ -126,7 +133,7 @@ function blockSpanSeek(spans) {
 
 
 async function getExplorerAddressDetails(addr) {
-    const browser = await puppeteer.launch();
+    const browser = isWindows ? await puppeteer.launch() : isCurrentUserRoot() ? await puppeteer.launch({args: ['--no-sandbox']}) : await puppeteer.launch();
     const page = await browser.newPage();
     await page.goto(config.explorerUrl+'/address/'+addr, {waitUntil: 'networkidle0'});
 
@@ -147,7 +154,7 @@ async function getExplorerAddressDetails(addr) {
 
 async function getExplorerTransactionDetails(txid) {
 
-    const browser = await puppeteer.launch();
+    const browser = isWindows ? await puppeteer.launch() : isCurrentUserRoot() ? await puppeteer.launch({args: ['--no-sandbox']}) : await puppeteer.launch();
     const page = await browser.newPage();
     await page.goto(config.explorerUrl+'/tx/'+txid, {waitUntil: 'networkidle0'});
 

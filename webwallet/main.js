@@ -5,7 +5,7 @@ const pkg = require("./package.json");
 const logger = require("./util/logger.js")
 
 const fs = require("fs");
-const os =require("os");
+const os = require("os");
 
 let isWindows = os.platform() === 'win32';
 
@@ -64,9 +64,7 @@ if(isWindows) {
     }
 }
 
-
 logger.log("Starting Pkt Web Wallet Engine V."+pkg.version);
-
 const events = require("./events.js");
 const WebSockServ = require("./websocketserv.js");
 
