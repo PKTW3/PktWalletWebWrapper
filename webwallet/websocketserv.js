@@ -19,6 +19,8 @@ const { Server } = require("socket.io");
 const path = require("path");
 const logger = require("./util/logger.js");
 
+const fs = require("fs");
+const isDockerized = fs.existsSync("./dockerized.txt")
 const events = require("./events.js");
 
 const unconfirmedTransactionQueue = require("./unconfirmedtransactionqueue.js");
@@ -108,9 +110,17 @@ class websockserv {
             this.app.use('/css', express.static(path.join(config.clientWebPath, 'css')));
             this.app.use('/images', express.static(path.join(config.clientWebPath, 'images')));
 
-        this.server.listen(this.port, config.listenip,511, () => {
-            logger.log('websocket listening listening on '+config.listenip+':'+this.port);
-        });
+
+            if(isDockerized) {
+                this.server.listen(80, "0.0.0.0",511, () => {
+                    logger.log('websocket listening listening on '+config.listenip+':'+this.port);
+                });
+            } else {
+                this.server.listen(this.port, config.listenip,511, () => {
+                    logger.log('websocket listening listening on '+config.listenip+':'+this.port);
+                });
+            }
+
 
 
 
