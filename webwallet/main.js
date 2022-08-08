@@ -4,13 +4,18 @@ const pkg = require("./package.json");
 
 const logger = require("./util/logger.js")
 
-const fs = require("fs");
+
 const os = require("os");
 
 let isWindows = os.platform() === 'win32';
 
+const fs = require("fs");
+const isDockerized = fs.existsSync("./dockerized.txt")
+
 let authExists = fs.existsSync("./auth.json");
 let configExists = fs.existsSync("./config.json");
+
+
 
 if(!authExists && !configExists) {
     logger.log("PW3 is in a default state, please run  Please run node setup/generateauthjson.js & node setup/generateconfigjson.js");

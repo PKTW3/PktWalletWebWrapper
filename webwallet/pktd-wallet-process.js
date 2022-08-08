@@ -8,6 +8,9 @@ const events = require("./events.js");
 
 const logger = require('./util/logger.js');
 
+const fs = require("fs");
+const isDockerized = fs.existsSync("./dockerized.txt")
+
 class pktdWalletProcess {
 
     constructor(onProcessDeath=undefined) {
@@ -16,7 +19,11 @@ class pktdWalletProcess {
         if(isWindows) {
             this.child = this.shell.exec(config.walletbinpath + "pktwallet.exe", {async:true, silent: true});
         } else {
-            this.child = this.shell.exec(config.walletbinpath + "pktwallet", {async:true, silent: true});
+            if(isDockerized) {
+                this.child = this.shell.exec("./pktd/bin/pktwallet", {async:true, silent: true});
+            } else {
+                this.child = this.shell.exec(config.walletbinpath + "pktwallet", {async:true, silent: true});
+            }
         }
 
         this.running = true;
