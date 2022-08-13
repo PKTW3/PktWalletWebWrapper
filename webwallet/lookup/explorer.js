@@ -13,6 +13,7 @@ async function getCurrentBlockHeight() {
 
     const browser = isWindows ? await puppeteer.launch() : isCurrentUserRoot() ? await puppeteer.launch({args: ['--no-sandbox']}) : await puppeteer.launch();
     const page = await browser.newPage();
+    await page.setDefaultNavigationTimeout(180000);
     await page.goto(config.explorerUrl, {waitUntil: 'networkidle0'});
 
     const tds = await page.evaluate(() => {
@@ -28,6 +29,7 @@ async function getExplorerBlockDetails(blkid) {
 
     const browser = isWindows ? await puppeteer.launch() : isCurrentUserRoot() ? await puppeteer.launch({args: ['--no-sandbox']}) : await puppeteer.launch();
     const page = await browser.newPage();
+    await page.setDefaultNavigationTimeout(180000);
     await page.goto(config.explorerUrl+'/block/'+blkid, {waitUntil: 'networkidle0'});
 
     const spans = await page.evaluate(() => {
@@ -135,6 +137,7 @@ function blockSpanSeek(spans) {
 async function getExplorerAddressDetails(addr) {
     const browser = isWindows ? await puppeteer.launch() : isCurrentUserRoot() ? await puppeteer.launch({args: ['--no-sandbox']}) : await puppeteer.launch();
     const page = await browser.newPage();
+    await page.setDefaultNavigationTimeout(180000);
     await page.goto(config.explorerUrl+'/address/'+addr, {waitUntil: 'networkidle0'});
 
     const spans = await page.evaluate(() => {
@@ -156,6 +159,7 @@ async function getExplorerTransactionDetails(txid) {
 
     const browser = isWindows ? await puppeteer.launch() : isCurrentUserRoot() ? await puppeteer.launch({args: ['--no-sandbox']}) : await puppeteer.launch();
     const page = await browser.newPage();
+    await page.setDefaultNavigationTimeout(180000);
     await page.goto(config.explorerUrl+'/tx/'+txid, {waitUntil: 'networkidle0'});
 
     const spans = await page.evaluate(() => {

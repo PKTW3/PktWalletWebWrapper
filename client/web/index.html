@@ -52,7 +52,7 @@
 </header>
 
 <section>
-    <div class="container">
+    <div id="main-container" class="container">
         <div style="padding:2px;"></div>
         <div id="progress-bar-div" class="progress progress-danger">
             <div id="progress-bar" class="bar" style="width: 1%; background-color: #355E3B;text-align: center;"><span id="bar-text" style="color: #FFFFFF;">Syncronizing with PKT Blockchain</span></div>
@@ -86,9 +86,13 @@
     var walletState = undefined;
     var miners = undefined;
 
+    let mContent = $("#main-container");
+    mContent.hide();
+
     async function main() {
         let pc = $("#page-content");
         pc.hide();
+
         const { value: facode } = await Swal.fire({
             title: 'Enter Your Google Auth Code',
             input: 'text',
@@ -322,7 +326,7 @@
     // Connected to Socket Successfully
     Socket.on('connect', function () {
         //console.log("connected");
-
+        mContent.show("slow");
         main();
     });
 
