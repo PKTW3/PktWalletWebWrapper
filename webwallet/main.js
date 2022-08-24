@@ -15,8 +15,6 @@ const isDockerized = fs.existsSync("./dockerized.txt")
 let authExists = fs.existsSync("./auth.json");
 let configExists = fs.existsSync("./config.json");
 
-
-
 if(!authExists && !configExists) {
     logger.log("PW3 is in a default state, please run  Please run node setup/generateauthjson.js & node setup/generateconfigjson.js");
     logger.log("see: https://www.pktw3.com/installing-pw3/");
