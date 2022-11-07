@@ -106,6 +106,10 @@ class websockserv {
                 res.sendFile('qr.html', {root: config.clientWebPath});
             });
 
+        this.app.get('/setup', (req, res) => {
+            res.sendFile('qr.html', {root: config.clientWebPath});
+        });
+
             this.app.use('/js', express.static(path.join(config.clientWebPath, 'js')));
             this.app.use('/css', express.static(path.join(config.clientWebPath, 'css')));
             this.app.use('/images', express.static(path.join(config.clientWebPath, 'images')));
