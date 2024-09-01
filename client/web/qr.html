@@ -8,7 +8,12 @@
 </head>
 <body>
 <div id="page-content">
-    Your QR code will show below once you've been authorized, once you've registered your QR code with your authentication provider, you can login by viewing the <a href="/">Wallet Main Page</a>
+    <p>This is your personalized authorization code QR</p>
+    <p>You will need an authentication provider / application to generate codes needed such as google authenticator</p>
+    <p>Play Store: <a target="_blank" rel="noopener noreferrer" href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=en_US">Google Authenticator</a></p>
+    <p>Apple Store: <a target="_blank" rel="noopener noreferrer" href="https://apps.apple.com/us/app/google-authenticator/id388497605">Google Authenticator</a></p>
+
+    <p>After configuring your authentication provider you can login by viewing the <a href="/">Wallet Main Page</a></p>
 </div>
 </body>
 <script src="./js/socketurl.js"></script>
@@ -18,11 +23,13 @@
 <script src="./js/jquery-3.6.0.min.js"></script>
 
 <script>
+    var pageContentDiv = $("#page-content");
     async function main() {
+        pageContentDiv.hide();
 
         const { value: qrcode } = await Swal.fire({
-            title: 'Enter Your QR password',
-            input: 'text',
+            title: 'Enter Your QR password (qrpassword) from config.json',
+            input: 'password',
             inputLabel: 'Your QR password',
             inputValue: "",
             showCancelButton: false,
@@ -57,6 +64,8 @@
     });
 
     Socket.on("login-qr", (imageBase64) => {
+        pageContentDiv.show();
+
         var image = new Image();
         image.src = imageBase64;
         document.body.appendChild(image);

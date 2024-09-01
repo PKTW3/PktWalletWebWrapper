@@ -13,6 +13,9 @@ const logger = require("./util/logger.js");
 
 const fs = require("fs");
 const isDockerized = fs.existsSync("./dockerized.txt")
+const RPC = require("./util/rpc.js");
+
+const rpc = require("./util/rpc.js");
 
 function shelljsExec(shell, cmd) {
     return new Promise((resolve, reject) => {
@@ -76,10 +79,13 @@ class Wallet {
 
         let info = await this.getWalletInfo();
 
-        newState.isSyncing = info.Syncing;
-        newState.currentHeight = info.CurrentHeight;
-
         newState.walletStats = info.WalletStats;
+
+        newState.isSyncing = newState.walletStats.Syncing;
+
+        //console.log(info);
+
+        newState.currentHeight = info.CurrentHeight;
 
         newState.resyncing = newState.walletStats.MaintenanceInProgress == true && newState.walletStats.MaintenanceName.includes("resync");
 
@@ -89,7 +95,7 @@ class Wallet {
         }
 
         if (newState.isSyncing) {
-            newState.currentChainHead = await explorer.getCurrentBlockHeight();
+            newState.currentChainHead = info.BackendHeight;
         } else {
             newState.currentChainHead = newState.currentHeight;
         }
@@ -116,9 +122,9 @@ class Wallet {
             }
         }
 
-        this.state = newState;
+        newState.info = info;
 
-        //console.log(this.state);
+        this.state = newState;
 
         if(socket !== undefined) {
             socket.emit("wallet-state", this.state);
@@ -133,24 +139,13 @@ class Wallet {
     async unlockWallet(period=10) {
         if(this.daemonRunning) {
             let t = this;
-            let shell = require("shelljs");
-            shell.config.silent = false;
 
             this.lockTimeout = setTimeout(() => {
                 t.lockWallet();
             }, period * 1000);
 
-            let cmd = config.walletbinpath+"pktctl --wallet walletpassphrase " + config.wallet_password + " " + period;
 
-            if(isDockerized) {
-                cmd = "./pktd/bin/pktctl --wallet walletpassphrase " + config.wallet_password + " " + period;
-            }
-
-            if(isWindows)  {
-                cmd = config.walletbinpath+"pktctl.exe --wallet walletpassphrase " + config.wallet_password + " " + period
-            }
-
-            let r = await shelljsExec(shell, cmd);
+            let r =  await rpc.unlockWallet(10);
 
             r = r.toString();
 
@@ -172,65 +167,49 @@ class Wallet {
     }
 
     async getWalletInfo() {
-        if(this.daemonRunning) {
-            let shell = require("shelljs");
-            shell.config.silent = true;
+         let json = await rpc.getWalletBlockchainInformation();
 
-            let json = !isWindows ? isDockerized ? await shelljsExec(shell, "./pktd/bin/pktctl --wallet getinfo") : await shelljsExec(shell, config.walletbinpath+"pktctl --wallet getinfo") : await shelljsExec(shell, config.walletbinpath+"pktctl.exe --wallet getinfo");
-
-            return JSON.parse(json);
-        }
+         return json;
     }
 
     lockWallet() {
-        if(this.daemonRunning) {
-            let shell = require("shelljs");
-            shell.config.silent = true;
-
-            if(isWindows) {
-                shelljsExec(shell, config.walletbinpath+"pktctl.exe --wallet walletlock");
-            } else {
-                if(isDockerized) {
-                    shelljsExec(shell, "./pktd/bin/pktctl --wallet walletlock");
-                } else {
-                    shelljsExec(shell, config.walletbinpath + "pktctl --wallet walletlock");
-                }
-            }
-
-
-            this.locked = true;
+        return new Promise(async (resolve, reject) => {
+            this.locked = await rpc.lockWallet();
 
             this.state.locked = this.locked;
 
-            return this.locked;
-        }
+            return resolve(this.locked);
+        });
     }
 
     async getWalletBalances() {
-        if(this.daemonRunning) {
-            let shell = require("shelljs");
-            shell.config.silent = true;
+            let results = await rpc.getAddresses();
 
-            let json = !isWindows ? isDockerized ? await shelljsExec(shell, "./pktd/bin/pktctl --wallet getaddressbalances 1 1") : await shelljsExec(shell, config.walletbinpath+"pktctl --wallet getaddressbalances 1 1") : await shelljsExec(shell, config.walletbinpath+"pktctl.exe --wallet getaddressbalances 1 1") ;
+            let total = [];
 
-            //console.log(json);
+            for(let i = 0; i < results.result.length; i++) {
+                let result = results.result[i];
 
-            return JSON.parse(json);
-        }
+                //console.log(result);
+
+                total.push(result);
+            }
+
+
+            return total;
     }
 
     async getGlobalBalance() {
-        if(this.daemonRunning) {
-            let shell = require("shelljs");
-            shell.config.silent = true;
+            let results = await rpc.getAddresses();
+            let total = 0;
 
-            let r = !isWindows ? isDockerized ? await shelljsExec(shell, "./pktd/bin/pktctl --wallet getbalance")  : await shelljsExec(shell, config.walletbinpath+"pktctl --wallet getbalance") : await shelljsExec(shell, config.walletbinpath+"pktctl.exe --wallet getbalance");
+            for(let i = 0; i < results.result.length; i++) {
+                let result = results.result[i];
 
-            r = r.toString();
-            r = r.replace("\n", "");
+                total += result.total;
+            }
 
-            return r;
-        }
+            return total;
     }
 
     async spendGlobal(toAddr, pktAmount) {
@@ -254,33 +233,32 @@ class Wallet {
     //TODO: a web function that pings the explorer / a explorer until the transaction from a spend is considered confirmed
     //this will work into the payment spooling queue
     async spendPkt(fromAddr, toAddr, pktAmount) {
-        //if(this.daemonRunning) {
+        if(this.daemonRunning) {
 
         if(pktAmount === 0 && fromAddr === toAddr) {
-            let shell = require("shelljs");
-            shell.config.silent = false;
-
             if (this.locked) {
-                await this.unlockWallet(10);
+                await rpc.unlockWallet(10);
             }
 
-            let res = !isWindows ? isDockerized ? await shelljsExec(shell, "./pktd/bin/pktctl --wallet sendfrom " + toAddr + " 0 '[\"" + fromAddr + "\"]'") : await shelljsExec(shell, config.walletbinpath+"pktctl --wallet sendfrom " + toAddr + " 0 '[\"" + fromAddr + "\"]'") : await shelljsExec(shell, config.walletbinpath+'pktctl.exe --wallet sendfrom ' + toAddr + " 0 [\\\"" + fromAddr + "\\\"]") ;
+            let val = await rpc.sendFromAddress(fromAddr, toAddr, 0);
 
-            return res;
+            console.log(val);
+
+            return val;
         } else {
-            let shell = require("shelljs");
-            shell.config.silent = false;
-
             if (this.locked) {
-                await this.unlockWallet(10);
+                await rpc.unlockWallet(10);
             }
 
-            let res = !isWindows ? isDockerized ? await shelljsExec(shell, "./pktd/bin/pktctl --wallet sendfrom " + toAddr + " " + pktAmount + " '[\"" + fromAddr + "\"]'") : await shelljsExec(shell, config.walletbinpath+"pktctl --wallet sendfrom " + toAddr + " " + pktAmount + " '[\"" + fromAddr + "\"]'") : await shelljsExec(shell, config.walletbinpath+'pktctl.exe --wallet sendfrom ' + toAddr + " " + pktAmount + " [\\\"" + fromAddr + "\\\"]") ;
+            let val = await rpc.sendFromAddress(fromAddr, toAddr, pktAmount);
 
-            return res;
+            console.log(val);
+
+
+            return val;
         }
 
-        //}
+        }
     }
 
     resyncWallet()  {
@@ -324,22 +302,10 @@ class Wallet {
 
     }
 
-    getNewAddress() {
+    async getNewAddress() {
         if(this.daemonRunning)
         {
-            let shell = require("shelljs");
-            shell.config.silent = true;
-
-            if(isWindows) {
-                return shelljsExec(shell, config.walletbinpath+"pktctl.exe --wallet getnewaddress");
-            } else {
-                if(isDockerized) {
-                    return shelljsExec(shell, "./pktd/bin/pktctl --wallet getnewaddress");
-                } else {
-                    return shelljsExec(shell, config.walletbinpath+"pktctl --wallet getnewaddress");
-
-                }
-            }
+            return await rpc.getNewAddress();
         }
     }
 

@@ -17,12 +17,12 @@ class pktdWalletProcess {
         this.shell = require("shelljs");
 
         if(isWindows) {
-            this.child = this.shell.exec(config.walletbinpath + "pktwallet.exe", {async:true, silent: true});
+            this.child = this.shell.exec(config.walletbinpath + "pktwallet.exe  --rpclisten "+config["wallet-rpc-address"]+":"+config["wallet-rpc-port"]+" --rpcuser="+config["wallet-rpc-user"]+" --rpcpass="+config["wallet-rpc-pass"], {async:true, silent: true});
         } else {
             if(isDockerized) {
-                this.child = this.shell.exec("./pktd/bin/pktwallet", {async:true, silent: true});
+                this.child = this.shell.exec("./pktd/bin/pktwallet --rpclisten "+config["wallet-rpc-address"]+":"+config["wallet-rpc-port"]+" --rpcuser="+config["wallet-rpc-user"]+" --rpcpass="+config["wallet-rpc-pass"], {async:true, silent: true});
             } else {
-                this.child = this.shell.exec(config.walletbinpath + "pktwallet", {async:true, silent: true});
+                this.child = this.shell.exec(config.walletbinpath + "pktwallet --rpclisten "+config["wallet-rpc-address"]+":"+config["wallet-rpc-port"]+" --rpcuser="+config["wallet-rpc-user"]+" --rpcpass="+config["wallet-rpc-pass"], {async:true, silent: true});
             }
         }
 
@@ -34,7 +34,7 @@ class pktdWalletProcess {
             let started = false;
 
             if(data.toString().includes("Waiting for chain backend to sync to tip")) {
-                logger.log("PktD Commandline Wallet is syncing the backend to latest pkt tip point, once complete the web wallet frontend will be available");
+                logger.log("PktD Commandline Wallet is syncing the backend to latest pkt tip point, once complete the web wallet frontend will be fully available");
                     //console.log("frontend starting...");
                     events.emit('frontend-start');
             } else if(data.toString().includes("Wallet frontend synced to tip")) {

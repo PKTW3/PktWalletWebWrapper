@@ -5,8 +5,6 @@ let auth = require("./auth/auth.js");
 
 const os = require("os");
 
-const ws = require("./consolesocket.js");
-
 let isWindows = os.platform() === 'win32';
 
 function getAuthConfig() {
@@ -25,9 +23,6 @@ const events = require("./events.js");
 
 const unconfirmedTransactionQueue = require("./unconfirmedtransactionqueue.js");
 
-let consoleSocket = undefined;
-let minerManagerSyncer = undefined;
-
 class websockserv {
 
     constructor(pktdDaemon) {
@@ -39,14 +34,6 @@ class websockserv {
 
         let p = this;
         this.lastFoldAttempt = undefined;
-
-        consoleSocket = new ws(this);
-
-        minerManagerSyncer = setInterval(async () => {
-            if(consoleSocket.connected) {
-                consoleSocket.socket.emit("miners-request");
-            }
-        }, 10050);
 
         this.sessions = new HashMap();
         this.authedSessions = new HashMap();
@@ -196,29 +183,27 @@ class websockserv {
                 }
             });
 
-            socket.on("miners", async () => {
-                let authed = p.authedSessions.has(socket.id);
-
-                if(authed) {
-                    if(p.miners !== undefined) {
-                        socket.emit("miners", p.miners);
-                    }
-                }
-            })
-
             socket.on("close", async (reason)=> {
                 socket.emit("close", reason);
                 socket.disconnect();
             })
 
             socket.on("qr-request", async (testQrPassword) => {
+                if(config["enable-setup"]) {
                     testQrPassword = testQrPassword.toString();
 
-                    logger.log(testQrPassword + " VS "+config.qrpassword);
+                    logger.log(testQrPassword + " VS " + config.qrpassword);
 
-                    if(testQrPassword === config.qrpassword) {
+                    if (testQrPassword === config.qrpassword) {
                         socket.emit("login-qr", getAuthConfig().qrImage);
+                    } else {
+                        socket.emit("close", "invalid password");
+                        socket.disconnect();
                     }
+                } else {
+                    socket.emit("close", "This feature is disabled.");
+                    socket.disconnect();
+                }
             });
 
             socket.on("fold-check", async (address) => {
@@ -316,6 +301,7 @@ class websockserv {
                                     })
                                 }
                             } else if(validAddress) {
+                                //TODO: redo spend global to conform with rpc
                                 let result = await p.pktWallet.spendGlobal(sendData.pktReceiverAddress, sendData.pktAmount);
 
                                 logger.log(result);

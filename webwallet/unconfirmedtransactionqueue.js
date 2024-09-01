@@ -1,7 +1,6 @@
 //TODO: queued implementation of wallet sends / confirmations of said sends on blockchain with callback (and persistence)
 //wallet send locks can be applied on a sending address basis, looks like you can still submit transactions with different wallet addresses with verfied values
 const Queue = require('better-queue');
-const explorer = require("./lookup/explorer.js");
 const events = require("./events.js");
 
 const PersistentMap = require("persistentmap");
@@ -9,6 +8,32 @@ const PersistentMap = require("persistentmap");
 const pm = new PersistentMap('./storage/unconfirmed_tx_index.json');
 
 const logger = require("./util/logger.js");
+
+const rpc = require("./util/rpc.js");
+
+function scanForTransaction(txid) {
+    return new Promise(async (resolve, reject) => {
+        let transactionCall = await rpc.showTransactions(10);
+
+        let transaction = undefined;
+
+        if(transactionCall.error === null) {
+            //console.log(transactions);
+            let transactions = transactionCall.result;
+
+            for(let i = 0; i <transactions.length; i++) {
+                let transactionData = transactions[i];
+                if(transactionData.txid  === txid) {
+                    transaction = transactionData;
+                    break;
+                }
+            }
+        }
+
+        return resolve(transaction);
+    });
+}
+
 
 const q = new Queue(async function (input, cb) {
 
@@ -18,20 +43,21 @@ const q = new Queue(async function (input, cb) {
 
     //console.log(txid);
 
-    let txDetails = await explorer.getExplorerTransactionDetails(txid);
+    let txDetails = await scanForTransaction(txid);
 
-    if(txDetails.confirmed) {
+    if(txDetails !== undefined && txDetails["confirmations"] >= 1) {
         let s = {txid: txid, txDetails: txDetails};
+
         events.emit('transaction-confirmed', s);
         if(pm.has(txid)) {
             pm.delete(txid);
         }
 
-        logger.log(txid+" has confirmed. "+address)
+        logger.log(txid+" has confirmed sent. "+address)
 
         return cb();
     } else {
-        logger.log(txid+" has not been confirmed "+address)
+        logger.log(txid+" has not been confirmed sent "+address)
         q.push(input);
        return cb();
     }
