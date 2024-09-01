@@ -81,8 +81,9 @@ let server = undefined;
 
 logger.log("Waiting for PktD wallet service to finish starting...");
 
-events.on('frontend-start', () => {
+events.on('frontend-start',async () => {
     if(server === undefined) {
+
         logger.log("setting up web services...");
         server = new WebSockServ(walletDaemon);
     }

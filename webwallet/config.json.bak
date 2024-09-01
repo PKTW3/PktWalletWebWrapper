@@ -1,0 +1,17 @@
+{
+  "walletstorage":"C:\\Users\\user\\AppData\\Local\\Pktwallet\\pkt\\",
+  "wallet_password":"changeme",
+  "qrpassword":"changeme",
+  "walletbinpath":"C:\\Users\\user\\pktd-v1.5.0-windows\\bin\\",
+  "clientWebPath": "C:\\Users\\user\\PktWalletWebWrapperRPC\\client\\web",
+  "explorerUrl": "https://explorer-classic.pkt.cash/",
+  "consolePassword": "changemetosomethinglongandrandom",
+  "listenport": 80,
+  "listenip": "127.0.0.1",
+  "unconsolidatedTransationsFold":200,
+  "wallet-rpc-address": "127.0.0.1",
+  "wallet-rpc-port": 8334,
+  "wallet-rpc-user": "rpcuser",
+  "wallet-rpc-pass": "changemerpcpassword",
+  "enable-setup": true
+}
