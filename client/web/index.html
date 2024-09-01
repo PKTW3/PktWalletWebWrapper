@@ -65,10 +65,12 @@
 </div>
 
 <footer class="footer">
-    <div class="container">
+    <div id="footer" class="container">
         <hr>
-        <p>-</p>
-        <p>Pkt CLI Wallet Version: <span id="cli-v">-</span></p>
+        <p>Current Height: <span id="c-height">-</span></p>
+        <p>Network Height: <span id="n-height">-</span></p>
+        <p>Current Peers: <span id="c-peers">-</span></p>
+        <p>Pkt CLI Wallet Neutrino Version: <span id="cli-v">-</span></p>
     </div>
 </footer>
 
@@ -85,10 +87,14 @@
 
     let mContent = $("#main-container");
     mContent.hide();
+    let footer = $("#footer");
+    footer.hide();
+    let pc = $("#page-content");
 
     async function main() {
         let pc = $("#page-content");
         pc.hide();
+        footer.hide();
 
         const { value: facode } = await Swal.fire({
             title: 'Enter Your Google Auth Code',
@@ -130,9 +136,12 @@
 
     Socket.on("wallet-state", (walletState2) => {
         walletState = walletState2;
-        //console.log(JSON.stringify(walletState));
+        console.log(JSON.stringify(walletState));
 
-        $("#cli-v").html(JSON.stringify(walletState.info));
+        $("#cli-v").html(walletState.info["WalletVersion"]);
+        $("#c-height").html(walletState.info["CurrentHeight"]);
+        $("#n-height").html(walletState.info["BackendHeight"]);
+        $("#c-peers").html(walletState.info["NeutrinoInfo"]["Peers"].length);
 
         try {
             let unconfirmed = 0;
@@ -176,8 +185,9 @@
     });
 
     Socket.on("authorized", () => {
-        let pc = $("#page-content");
+        mContent.show();
         pc.show();
+        footer.show();
 
         Socket.emit("refresh-state");
         Socket.emit("miners");
@@ -205,11 +215,6 @@
 
     Socket.on("wallet-status", (status) => {
         $("#wallet-status").html(status);
-    });
-
-    Socket.on("miners", (agents) => {
-        miners = agents;
-        console.log(miners);
     });
 
     Socket.on("create-address", (result)=> {
@@ -583,10 +588,6 @@
             confirmButtonText: 'Ok'
         });
 
-    });
-
-    $("#a-history").on("click", () => {
-        showHistory();
     });
 </script>
 
