@@ -4,7 +4,7 @@
   "qrpassword":"changeme",
   "walletbinpath":"C:\\Users\\user\\pktd-v1.5.0-windows\\bin\\",
   "clientWebPath": "C:\\Users\\user\\PktWalletWebWrapperRPC\\client\\web",
-  "explorerUrl": "https://explorer-classic.pkt.cash/",
+  "explorerUrl": "https://explorer.pkt.ai",
   "consolePassword": "changemetosomethinglongandrandom",
   "listenport": 80,
   "listenip": "127.0.0.1",
